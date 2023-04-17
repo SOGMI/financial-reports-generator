@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { format } from 'date-fns';
+import type { TransactionSchema } from './schemas';
+import type { TransactionApiResponse } from './paypalTypes';
 
-const prodApiBase = '';
+const prodApiBase = 'https://api.paypal.com';
 const sandboxApiBase = 'https://api-m.sandbox.paypal.com';
 
 class PaypalClient {
@@ -30,60 +31,66 @@ class PaypalClient {
         return buffer.toString('base64');
     }
 
-    getApiBase(sandbox = false) {
-        if (sandbox) {
+    getApiBase() {
+        if (this.isSandbox) {
             return sandboxApiBase;
         }
 
         return prodApiBase;
     }
 
-    async getTransactions(startDate: Date, endDate: Date, pageNum = 1) {
+    async getTransactions(
+        startDate: Date,
+        endDate: Date,
+        pageNum = 1
+    ): Promise<TransactionSchema[]> {
+        console.log(startDate, endDate);
         const url = `${this.getApiBase()}/v1/reporting/transactions?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}&fields=all&page_size=500&page=${pageNum}`;
-        const result = await axios.get(url, {
+        const result = await axios.get<TransactionApiResponse>(url, {
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Basic ${this.getAuthToken()}`,
-                // 'X-PAYPAL-SECURITY-CONTEXT': JSON.stringify({
-                //     version: '1.2',
-                //     actor: {
-                //         client_id: this.clientId,
-                //         id: '35740404',
-                //         auth_claims: [this.clientSecret],
-                //         auth_state: 'LOGGEDIN',
-                //         account_number: '1480460762532829633',
-                //         encrypted_account_number: 'JVH3C98SC4E84',
-                //         party_id: '1480460762532829633',
-                //         user_type: 'API_CALLER',
-                //     },
-                //     auth_token_type: 'ACCESS_TOKEN',
-                //     scopes: [
-                //         'https://uri.paypal.com/services/reporting/search/read',
-                //     ],
-                //     client_id: this.clientId,
-                //     // app_id: 'APP-80W284485P519543T',
-                //     // claims: {
-                //     //     actor_payer_id: 'JVH3C98SC4E84',
-                //     //     internal_application: 'false',
-                //     // },
-                //     subjects: [
-                //         {
-                //             subject: {
-                //                 id: '35762049',
-                //                 auth_claims: ['PAYER_ID'],
-                //                 auth_state: 'IDENTIFIED',
-                //                 account_number: '1256692217768566521',
-                //                 encrypted_account_number: 'XZXSPECPDZHZU',
-                //                 party_id: '2277051500535724448',
-                //                 user_type: 'MERCHANT',
-                //             },
-                //             features: [],
-                //         },
-                //     ],
-                // }),
             },
         });
-        return result;
+        const items: TransactionSchema[] = [];
+        for (const item of result.data.transaction_details) {
+            const gross = Number(
+                item.transaction_info.transaction_amount.value ?? '0'
+            );
+            const fees = Number(item.transaction_info.fee_amount.value ?? '0');
+            let payerName = '';
+            const { given_name, alternate_full_name, surname } =
+                item.payer_info.payer_name;
+            if (surname && given_name) {
+                payerName = `${given_name} ${surname}`;
+            } else if (alternate_full_name) {
+                payerName = alternate_full_name;
+            } else if (surname) {
+                payerName = surname;
+            } else if (given_name) {
+                payerName = given_name;
+            }
+
+            items.push({
+                id: item.transaction_info.transaction_id,
+                amountGross: Number.isNaN(gross) ? 0 : gross,
+                amountFees: Number.isNaN(fees) ? 0 : fees,
+                amountNet:
+                    Number.isNaN(gross) || Number.isNaN(fees)
+                        ? 0
+                        : gross - fees,
+                currencyCode:
+                    item.transaction_info.transaction_amount.currency_code,
+                date: new Date(
+                    item.transaction_info.transaction_initiation_date
+                ),
+                description: '',
+                customerName: payerName,
+                customerEmail: null,
+            });
+        }
+
+        return [];
     }
 }
 

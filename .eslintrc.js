@@ -13,5 +13,6 @@ module.exports = {
         '@typescript-eslint/indent': 0,
         '@typescript-eslint/naming-convention': 0,
         '@typescript-eslint/no-redeclare': 0,
+        '@typescript-eslint/consistent-type-definitions': 0,
     },
 };
