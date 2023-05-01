@@ -1,17 +1,12 @@
-<div style="padding:10px; border: 1px solid gray; border-radius: 10px; text-align: center">
-
-**THIS REPO IS STILL A WORK IN PROGRESS**
-
-</div>
-
 # Financial Reports Generator
 
 Tool to autogenerate financial reports of donations from Square and Paypal.
 
 ## Prerequisites
 
--   NodeJS (Latest LTS)
+-   [NodeJS (Latest LTS)](https://nodejs.org/en)
 -   NPM
+-   [wkhtmltopdf](https://wkhtmltopdf.org/)
 
 ## Setup
 
