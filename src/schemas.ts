@@ -18,6 +18,10 @@ export const CliArgsSchema = z.object({
     end: z.string(),
     output: z.string(),
     sandbox: z.boolean().default(false),
+    paypalClientId: z.string().optional(),
+    paypalClientSecret: z.string().optional(),
+    squareAppId: z.string().optional(),
+    squareAccessToken: z.string().optional(),
 });
 
 export type CliArgsSchema = z.infer<typeof CliArgsSchema>;

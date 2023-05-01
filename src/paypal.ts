@@ -44,7 +44,6 @@ class PaypalClient {
         endDate: Date,
         pageNum = 1
     ): Promise<TransactionSchema[]> {
-        console.log(startDate, endDate);
         const url = `${this.getApiBase()}/v1/reporting/transactions?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}&fields=all&page_size=500&page=${pageNum}`;
         const result = await axios.get<TransactionApiResponse>(url, {
             headers: {
@@ -53,11 +52,11 @@ class PaypalClient {
             },
         });
         const items: TransactionSchema[] = [];
-        for (const item of result.data.transaction_details) {
+        for (const item of result.data.transaction_details ?? []) {
             const gross = Number(
-                item.transaction_info.transaction_amount.value ?? '0'
+                item.transaction_info.transaction_amount?.value ?? '0'
             );
-            const fees = Number(item.transaction_info.fee_amount.value ?? '0');
+            const fees = Number(item.transaction_info.fee_amount?.value ?? '0');
             let payerName = '';
             const { given_name, alternate_full_name, surname } =
                 item.payer_info.payer_name;
@@ -90,7 +89,7 @@ class PaypalClient {
             });
         }
 
-        return [];
+        return items;
     }
 }
 

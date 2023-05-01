@@ -4,6 +4,7 @@ module.exports = {
         node: true,
     },
     extends: ['xo', 'xo-typescript', 'prettier'],
+    ignorePatterns: ['*.js', 'dist/**/*', '*.html', 'node_modules'],
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',

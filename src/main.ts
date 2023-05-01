@@ -1,49 +1,90 @@
+#!/usr/bin/env node
+
 import dotenv from 'dotenv';
+import path from 'node:path';
 import PaypalClient from './paypal';
-import { program } from 'commander';
-import { CliArgsSchema, EnvironmentSchema } from './schemas';
-import type { AxiosError } from 'axios';
+import { readFile, createWriteStream } from 'fs-extra';
+import { EnvironmentSchema } from './schemas';
 import SquareClient from './square';
+import { getTableHtml } from './rendering';
+import htmlToPdf from 'wkhtmltopdf';
+import { format } from 'date-fns';
 
 dotenv.config();
 
-program
-    .name('financial-reports-generator')
-    .requiredOption('-s, --start <date>', 'The start date')
-    .requiredOption('-e, --end <date>', 'The end date')
-    .requiredOption('-o, --output <path>', 'output directory')
-    .option('--sandbox', 'Whether to connect to the sandbox endpoint or not');
-
-program.parse();
-
-async function main() {
-    const env = EnvironmentSchema.parse(process.env);
-    const args = CliArgsSchema.parse(program.opts());
-    console.log(args);
-    const paypal = new PaypalClient(
-        env.PAYPAL_CLIENT_ID ?? '',
-        env.PAYPAL_CLIENT_SECRET ?? '',
-        args.sandbox
-    );
-    const square = new SquareClient(
-        env.SQUARE_APP_ID ?? '',
-        env.SQUARE_ACCESS_TOKEN ?? '',
-        args.sandbox
-    );
-    // try {
-    //     const transactions = await paypal.getTransactions(
-    //         new Date(args.start),
-    //         new Date(args.end)
-    //     );
-    //     console.log(transactions);
-    // } catch (err) {
-    //     console.error((err as AxiosError).status);
-    //     console.error((err as AxiosError).toJSON());
-    // }
-
-    console.log(
-        await square.getTransactions(new Date(args.start), new Date(args.end))
-    );
+interface FinancialGeneratorArgs {
+    start: Date;
+    end: Date;
+    output: string;
+    sandbox: boolean;
+    paypalClientId?: string;
+    paypalClientSecret?: string;
+    squareAppId?: string;
+    squareAccessToken?: string;
 }
 
-void main();
+async function generateReport({
+    start,
+    end,
+    output,
+    sandbox,
+    paypalClientId,
+    paypalClientSecret,
+    squareAccessToken,
+    squareAppId,
+}: FinancialGeneratorArgs) {
+    const env = EnvironmentSchema.parse(process.env);
+    const paypal = new PaypalClient(
+        paypalClientId ?? env.PAYPAL_CLIENT_ID ?? '',
+        paypalClientSecret ?? env.PAYPAL_CLIENT_SECRET ?? '',
+        sandbox
+    );
+    const square = new SquareClient(
+        squareAppId ?? env.SQUARE_APP_ID ?? '',
+        squareAccessToken ?? env.SQUARE_ACCESS_TOKEN ?? '',
+        sandbox
+    );
+    const paypalTransactions = await paypal.getTransactions(start, end);
+    const squareTransaction = await square.getTransactions(start, end);
+
+    const title = `SOGMI Donations Report ${format(
+        start,
+        'MM/dd/yyyy'
+    )}-${format(end, 'MM/dd/yyyy')}`;
+    const contentHtml = `
+        <h1 class="text-2xl font-bold">
+            ${title}
+        </h1>
+        ${getTableHtml(paypalTransactions, 'Paypal Transactions')}
+        ${getTableHtml(squareTransaction, 'Square Transactions')}
+    `;
+    const htmlTemplate = await readFile(
+        path.resolve(__dirname, './assets/template.html'),
+        'utf-8'
+    );
+    const cssContent = await readFile(
+        path.resolve(__dirname, './assets/tailwind.generated.css'),
+        'utf-8'
+    );
+    const html = htmlTemplate
+        .replace('{{content}}', contentHtml)
+        .replace('{{css}}', cssContent)
+        .replace('{{title}}', title);
+
+    await new Promise((resolve, reject) => {
+        const writeStream = createWriteStream(output);
+        htmlToPdf(html, {
+            pageSize: 'Letter',
+            footerFontSize: 8,
+            footerRight: `page [page] of [topage]`,
+        }).pipe(writeStream);
+        writeStream.on('finish', () => {
+            resolve(true);
+        });
+        writeStream.on('error', (err) => {
+            reject(err);
+        });
+    });
+}
+
+export default generateReport;

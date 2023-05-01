@@ -33,7 +33,7 @@ class SquareClient {
                 const transaction: TransactionSchema = {
                     id: item.id ?? '',
                     amountGross: gross,
-                    amountFees: fees,
+                    amountFees: fees * -1,
                     amountNet: gross - fees,
                     currencyCode:
                         item.amountMoney?.currency ??
