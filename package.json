@@ -9,7 +9,7 @@
         "css:watch": "tailwindcss -i src/assets/tailwind.css -o src/assets/tailwind.generated.css --watch",
         "build": "npm run css && tsc && npm run copy-assets",
         "dev": "concurrently \"npm run css:watch\" \"tsc --watch\"",
-        "execute": "npm run build && node dist/main.js",
+        "execute": "npm run build && node dist/cli.js",
         "lint": "eslint",
         "prepublishOnly": "npm run lint && npm run build"
     },

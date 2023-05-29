@@ -8,9 +8,9 @@ interface TableRowInput {
     description: string;
     id: string;
     currencyCode: string;
-    amountGross: number;
-    amountFees: number;
-    amountNet: number;
+    amountGross?: number;
+    amountFees?: number;
+    amountNet?: number;
     isBold: boolean;
 }
 
@@ -28,23 +28,41 @@ export function getTableRowHtml({
 }: TableRowInput) {
     const fontClass = isBold ? 'font-bold' : 'font-normal';
     const row = `
-         <tr class="border-b">
-            <th class="p-2 ${fontClass} text-sm">${
-        date ? format(date, 'MM/dd/yyyy') : ''
-    }</th>
-            <th class="p-2 ${fontClass} text-sm">
-                <div>${name}</div>
-                <div>${email}</div>
-            </th>
-            <th class="p-2 ${fontClass} text-sm">
-                <div>${description}</div>
-                <div>${id.length > 0 ? `ID: ${id}` : ''}</div>
-            </th>
-            <th class="p-2 ${fontClass} text-sm">${currencyCode}</th>
-            <th class="p-2 ${fontClass} text-sm">${amountGross.toFixed(2)}</th>
-            <th class="p-2 ${fontClass} text-sm">${amountFees.toFixed(2)}</th>
-            <th class="p-2 ${fontClass} text-sm">${amountNet.toFixed(2)}</th>
-        </tr>`;
+    <tr class="border-b">
+        <th class="p-2 ${fontClass} text-sm">
+            ${date ? format(date, 'MM/dd/yyyy') : ''}
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            <div>${name}</div>
+            <div>${email}</div>
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            <div>${description}</div>
+            <div>${id.length > 0 ? `ID: ${id}` : ''}</div>
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            ${currencyCode}
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            <div class="whitespace-nowrap">
+                ${
+                    typeof amountGross === 'number'
+                        ? amountGross.toFixed(2)
+                        : ''
+                }            
+            </div>
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            <div class="whitespace-nowrap">
+                ${typeof amountFees === 'number' ? amountFees.toFixed(2) : ''}
+            </div>
+        </th>
+        <th class="p-2 ${fontClass} text-sm">
+            <div class="whitespace-nowrap">
+                ${typeof amountNet === 'number' ? amountNet.toFixed(2) : ''}
+            </div>
+        </th>
+    </tr>`;
     return row;
 }
 
@@ -96,9 +114,9 @@ export function getTableHtml(transactions: TransactionSchema[], title: string) {
             id: '',
             name: '',
             description: '',
-            amountNet: totalNet,
+            amountNet: undefined,
             amountFees: totalFees,
-            amountGross: totalGross,
+            amountGross: undefined,
             email: '',
             currencyCode: '',
             isBold: true,
