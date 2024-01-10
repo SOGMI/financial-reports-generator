@@ -8,7 +8,7 @@ import { EnvironmentSchema } from './schemas';
 import SquareClient from './square';
 import { getTableHtml } from './rendering';
 import htmlToPdf from 'wkhtmltopdf';
-import { format } from 'date-fns';
+import { add, format } from 'date-fns';
 
 dotenv.config();
 
@@ -44,8 +44,9 @@ async function generateReport({
         squareAccessToken ?? env.SQUARE_ACCESS_TOKEN ?? '',
         sandbox
     );
-    const paypalTransactions = await paypal.getTransactions(start, end);
-    const squareTransaction = await square.getTransactions(start, end);
+    const finalEnd = add(end, { hours: 23, minutes: 59, seconds: 59 });
+    const paypalTransactions = await paypal.getTransactions(start, finalEnd);
+    const squareTransaction = await square.getTransactions(start, finalEnd);
 
     const title = `SOGMI Donations Report ${format(
         start,
