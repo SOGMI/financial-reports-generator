@@ -42,7 +42,8 @@ class PaypalClient {
     async getTransactions(
         startDate: Date,
         endDate: Date,
-        pageNum = 1
+        pageNum = 1,
+        filterWithdrawls = true
     ): Promise<TransactionSchema[]> {
         const url = `${this.getApiBase()}/v1/reporting/transactions?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}&fields=all&page_size=500&page=${pageNum}`;
         const result = await axios.get<TransactionApiResponse>(url, {
@@ -87,6 +88,10 @@ class PaypalClient {
                 customerName: payerName,
                 customerEmail: null,
             });
+        }
+
+        if (filterWithdrawls) {
+            return items.filter((item) => item.amountGross >= 0);
         }
 
         return items;
