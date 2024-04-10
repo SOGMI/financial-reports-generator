@@ -78,13 +78,13 @@ class PaypalClient {
                 amountNet:
                     Number.isNaN(gross) || Number.isNaN(fees)
                         ? 0
-                        : gross - fees,
+                        : gross + fees,
                 currencyCode:
                     item.transaction_info.transaction_amount.currency_code,
                 date: new Date(
                     item.transaction_info.transaction_initiation_date
                 ),
-                description: '',
+                description: item.transaction_info.transaction_note ?? '',
                 customerName: payerName,
                 customerEmail: null,
             });
