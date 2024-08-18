@@ -5,7 +5,6 @@ Tool to autogenerate financial reports of donations from Square and Paypal.
 ## Prerequisites
 
 -   [NodeJS (Latest LTS)](https://nodejs.org/en)
--   NPM
 -   [wkhtmltopdf](https://wkhtmltopdf.org/)
 
 ## Setup
@@ -19,7 +18,7 @@ SQUARE_APP_ID = <app-id>
 SQUARE_ACCESS_TOKEN = <access-token>
 ```
 
-You can alternatively specify these values ares function or command line arguments as detailed below
+You can alternatively specify these values as function or command line arguments as detailed below
 
 ## Usage
 
