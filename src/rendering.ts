@@ -1,5 +1,5 @@
 import type { TransactionSchema } from './schemas';
-import { format } from 'date-fns';
+import { format } from 'date-fns/format';
 
 interface TableRowInput {
     date?: Date;

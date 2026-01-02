@@ -8,7 +8,8 @@ import { EnvironmentSchema } from './schemas';
 import SquareClient from './square';
 import { getTableHtml } from './rendering';
 import htmlToPdf from 'wkhtmltopdf';
-import { add, format } from 'date-fns';
+import { format } from 'date-fns/format';
+import { add } from 'date-fns/add';
 
 dotenv.config();
 
@@ -37,12 +38,12 @@ async function generateReport({
     const paypal = new PaypalClient(
         paypalClientId ?? env.PAYPAL_CLIENT_ID ?? '',
         paypalClientSecret ?? env.PAYPAL_CLIENT_SECRET ?? '',
-        sandbox
+        sandbox,
     );
     const square = new SquareClient(
         squareAppId ?? env.SQUARE_APP_ID ?? '',
         squareAccessToken ?? env.SQUARE_ACCESS_TOKEN ?? '',
-        sandbox
+        sandbox,
     );
     const finalEnd = add(end, { hours: 23, minutes: 59, seconds: 59 });
     const paypalTransactions = await paypal.getTransactions(start, finalEnd);
@@ -50,7 +51,7 @@ async function generateReport({
 
     const title = `SOGMI Donations Report ${format(
         start,
-        'MM/dd/yyyy'
+        'MM/dd/yyyy',
     )}-${format(end, 'MM/dd/yyyy')}`;
     const contentHtml = `
         <h1 class="text-2xl font-bold">
@@ -61,11 +62,11 @@ async function generateReport({
     `;
     const htmlTemplate = await readFile(
         path.resolve(__dirname, './assets/template.html'),
-        'utf-8'
+        'utf-8',
     );
     const cssContent = await readFile(
         path.resolve(__dirname, './assets/tailwind.generated.css'),
-        'utf-8'
+        'utf-8',
     );
     const html = htmlTemplate
         .replace('{{content}}', contentHtml)
